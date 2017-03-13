@@ -8,10 +8,6 @@ import os
 import sys
 
 configjson = {}
-#configjson['consumer_key'] = 'srjYU7O6kwY90jRBSYQ2RXviF'
-#configjson['consumer_secret'] = 'FWvfqXHp04tWC2LczarterP3G3J9sBHLnyzoIxAAekKuy1CeIT'
-#configjson['access_token'] = '76635000-3pQ7Tb7NXKV3dSVepsVUenIswZlhXHhcPPT5pHWew'
-#configjson['access_secret'] = 'QSUMQFxnL1zDbdhJOOTJJ9X8kyD8YCLhy04Dbpk9tUeHa'
 arg = sys.argv
 # read config file
 with open(arg[1],'r') as configfile:
