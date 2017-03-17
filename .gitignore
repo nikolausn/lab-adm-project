@@ -1,3 +1,7 @@
 *.txt
 *.tweet
 *.pdf
+*.log
+*.out
+*.sqlite
+*.sqlite-journal

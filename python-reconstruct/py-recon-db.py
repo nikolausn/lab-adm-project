@@ -11,7 +11,7 @@ totalLine = 3
 linecounter=0
 nodes = {}
 edges = {}
-cascades = {}
+cascades = {} 
 cascadestag = {}
 
 conn = sqlite3.connect('reconstruct.sqlite');
@@ -26,8 +26,10 @@ c.execute("CREATE TABLE nodes (username,usernameo,userlink,object)")
 c.execute("CREATE TABLE edges (domainname,rangename,object)")
 c.execute("CREATE TABLE cascadeid (casid INTEGER,url)")
 c.execute("CREATE TABLE cascadehashid (casid INTEGER,hashtag)")
-c.execute("CREATE TABLE cascades (casid INTEGER,username,url,tweettime,tweettext,object)")
-c.execute("CREATE TABLE cascadeshash (casid INTEGER,username,tag,tweettime,tweettext,object)")
+#c.execute("CREATE TABLE cascades (casid INTEGER,username,neighborname,url,tweettime,tweettext,object)")
+#c.execute("CREATE TABLE cascadeshash (casid INTEGER,username,neighborname,tag,tweettime,tweettext,object)")
+c.execute("CREATE TABLE cascades (casid INTEGER,username,neighborname,url,tweettime,tweettext)")
+c.execute("CREATE TABLE cascadeshash (casid INTEGER,username,neighborname,tag,tweettime,tweettext)")
 c.execute('CREATE  INDEX "main"."cascades_casid" ON "cascades" ("casid" ASC)')
 c.execute('CREATE  INDEX "main"."cascadeid_casid" ON "cascadeid" ("casid" ASC)')
 c.execute('CREATE  INDEX "main"."cascadeshash_casid" ON "cascadeshash" ("casid" ASC)')
@@ -65,30 +67,34 @@ def insertCascadeHashId(cascadeid,hash):
 	c.execute("INSERT INTO cascadehashid VALUES (?,?)",params)
 
 def insertCascade(cascade):
-	params=[]
-	params.append(cascade['casid'])
-	params.append(cascade['username'])
-	params.append(cascade['url'])
-	params.append(cascade['time'])
-	params.append(cascade['text'])
-	params.append(json.dumps(cascade))
-	c = conn.cursor()
-	c.execute("INSERT INTO cascades VALUES (?,?,?,?,?,?)",params)
+	for neighbor in cascade['edges']:
+		params=[]
+		params.append(cascade['casid'])
+		params.append(cascade['username'])
+		params.append(neighbor['range']['username'])
+		params.append(cascade['url'])
+		params.append(cascade['time'])
+		params.append(cascade['text'])
+		#params.append(json.dumps(cascade))
+		c = conn.cursor()
+		c.execute("INSERT INTO cascades VALUES (?,?,?,?,?,?)",params)
 
 def insertCascadeHash(cascade):
-	params=[]
-	params.append(cascade['casid'])
-	params.append(cascade['username'])
-	params.append(cascade['tag'])
-	params.append(cascade['time'])
-	params.append(cascade['text'])
-	print(cascade)
-	params.append(json.dumps(cascade))
-	c = conn.cursor()
-	c.execute("INSERT INTO cascadeshash VALUES (?,?,?,?,?,?)",params)
+	for neighbor in cascade['edges']:
+		params=[]
+		params.append(cascade['casid'])
+		params.append(cascade['username'])
+		params.append(neighbor['range']['username'])
+		params.append(cascade['tag'])
+		params.append(cascade['time'])
+		params.append(cascade['text'])
+		#print(cascade)
+		#params.append(json.dumps(cascade))
+		c = conn.cursor()
+		c.execute("INSERT INTO cascadeshash VALUES (?,?,?,?,?,?)",params)
 
 
-counterfile = open('counter.txt','a')
+#counterfile = open('counter.txt','a')
 
 
 """
@@ -98,8 +104,8 @@ cascadeidfile = open('cascadeid.txt','a')
 cascadehashfile = open('cascadehashid.txt','a')
 """
 
-userRegex = re.compile('@[a-zA-Z_0-9]*')
-hashtagRegex = re.compile('#[a-zA-Z_0-9]*')
+userRegex = re.compile('@[a-zA-Z_0-9]+')
+hashtagRegex = re.compile('#[a-zA-Z_0-9]+')
 urlRegex = re.compile('http://[^ ]*')
 
 cascadeid = 0
@@ -112,7 +118,7 @@ def uniqfy(seq):
 
 with open('tweets2009-06.tweet','r') as tweets:
 	# write log for tweets
-	readLog = open('read.log','a')
+	#readLog = open('read.log','a')
 	# first line is number of tweets
 	tweets.readline()
 	line =0
@@ -145,21 +151,27 @@ with open('tweets2009-06.tweet','r') as tweets:
 				edge = edge[1:len(edge)]
 				#print(edge)
 				edgeNoCase = edge.lower()
-				if edge not in edges.keys():
-					if edgeNoCase not in nodes.keys():
-						nodes[edgeNoCase] = {'username': edgeNoCase, 'usernameo': edge, 'userlink': ''}
-						#nodesfile.writelines(json.dumps(nodes[edgeNoCase])+'\n')
-						insertNodes(nodes[edgeNoCase])
-					if usernameNoCase not in edges.keys():
-						edges[usernameNoCase] = {}
-						if edgeNoCase not in edges[usernameNoCase]:
-							edgeDoc = {}
-							edgeDoc['domain'] = { 'username': usernameNoCase, 'usernameo': username}
-							edgeDoc['range'] = { 'username': edgeNoCase, 'usernameo': edge}
-							edges[usernameNoCase][edgeNoCase] = edgeDoc
-							myedgeArr.append(edgeDoc)
-							#edgesfile.writelines(json.dumps(edges[usernameNoCase][edgeNoCase])+'\n')
-							insertEdges(edges[usernameNoCase][edgeNoCase])
+#				if edge not in edges.keys():
+				if edgeNoCase not in nodes.keys():
+					nodes[edgeNoCase] = {'username': edgeNoCase, 'usernameo': edge, 'userlink': ''}
+					#nodesfile.writelines(json.dumps(nodes[edgeNoCase])+'\n')
+					insertNodes(nodes[edgeNoCase])
+				if usernameNoCase not in edges.keys():
+					edges[usernameNoCase] = {}
+				if usernameNoCase!=edgeNoCase:
+					if edgeNoCase not in edges[usernameNoCase]:
+						edgeDoc = {}
+						edgeDoc['domain'] = { 'username': usernameNoCase, 'usernameo': username}
+						edgeDoc['range'] = { 'username': edgeNoCase, 'usernameo': edge}						
+						edges[usernameNoCase][edgeNoCase] = edgeDoc
+						#edgesfile.writelines(json.dumps(edges[usernameNoCase][edgeNoCase])+'\n')
+						insertEdges(edges[usernameNoCase][edgeNoCase])
+						#print(edges[usernameNoCase][edgeNoCase])
+#				print(text)
+#				print('d : '+usernameNoCase)
+#				print('r : '+edgeNoCase)
+				if usernameNoCase!=edgeNoCase:
+					myedgeArr.append(edges[usernameNoCase][edgeNoCase])
 
 			# get cascade url
 			#print(urlRegex.findall(text))
@@ -198,11 +210,12 @@ with open('tweets2009-06.tweet','r') as tweets:
 			line =-1
 			tweetArr = []			
 		line+=1
-		if (counter > 1000):
+		if (counter >= 1000000):
 			conn.commit();
-			counterfile.flush()
+			#counterfile.flush()
 			#print('commit ')
+			print(linecounter)
 			counter = 0
 		counter+=1
 		linecounter+=1
-		counterfile.writelines(str(linecounter)+'\n')
+		#counterfile.writelines(str(linecounter)+'\n')
