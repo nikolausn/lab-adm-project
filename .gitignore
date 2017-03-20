@@ -5,3 +5,5 @@
 *.out
 *.sqlite
 *.sqlite-journal
+*.gz
+*backup

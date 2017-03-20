@@ -35,23 +35,50 @@ conn.text_factory = str
 c = conn.cursor()
 #define cursor
 
+fileStream = {}
+cascades = {}
+edges = {}
+nodes = {}
+global cascadeid
+cascadeid = 0
+global counter
+counter = 0
+
 # create related table
 # nodes
-c.execute("CREATE TABLE nodes (userid TEXT,username TEXT)")
-c.execute("CREATE TABLE edges (userida TEXT,useridb TEXT)")
-c.execute("CREATE TABLE cascadeurlid (casid INTEGER,url TEXT)")
-# c.execute("CREATE TABLE cascadeid (casid INTEGER,hashtag)")
-#c.execute("CREATE TABLE cascades (casid INTEGER,username,neighborname,url,tweettime,tweettext,object)")
-#c.execute("CREATE TABLE cascadeshash (casid INTEGER,username,neighborname,tag,tweettime,tweettext,object)")
-c.execute("CREATE TABLE cascades (casid INTEGER,userida TEXT,useridb TEXT,tweettime TEXT,timestamp_ms INTEGER,tweettext TEXT)")
-#c.execute("CREATE TABLE cascadeshash (casid INTEGER,username,neighborname,tag,tweettime,tweettext)")
-c.execute('CREATE  INDEX "main"."nodes_id" ON "nodes" ("userid" ASC)')
-c.execute('CREATE  INDEX "main"."cascades_casid" ON "cascades" ("casid" ASC)')
-c.execute('CREATE  INDEX "main"."cascades_edge" ON "cascades" ("userida","useridb" ASC)')
-c.execute('CREATE  INDEX "main"."cascadeid_casid" ON "cascadeurlid" ("casid" ASC)')
-#c.execute('CREATE  INDEX "main"."cascadeshash_casid" ON "cascadeshash" ("casid" ASC)')
-#c.execute('CREATE  INDEX "main"."cascadehashid_casid" ON "cascadehashid" ("casid" ASC)')
+try:
+	c.execute("CREATE TABLE nodes (userid TEXT,username TEXT)")
+	c.execute("CREATE TABLE edges (userida TEXT,useridb TEXT)")
+	c.execute("CREATE TABLE cascadeurlid (casid INTEGER,url TEXT)")
+	# c.execute("CREATE TABLE cascadeid (casid INTEGER,hashtag)")
+	#c.execute("CREATE TABLE cascades (casid INTEGER,username,neighborname,url,tweettime,tweettext,object)")
+	#c.execute("CREATE TABLE cascadeshash (casid INTEGER,username,neighborname,tag,tweettime,tweettext,object)")
+	c.execute("CREATE TABLE cascades (casid INTEGER,userida TEXT,useridb TEXT,tweettime TEXT,timestamp_ms INTEGER,tweettext TEXT)")
+	#c.execute("CREATE TABLE cascadeshash (casid INTEGER,username,neighborname,tag,tweettime,tweettext)")
+	c.execute('CREATE  INDEX "main"."nodes_id" ON "nodes" ("userid" ASC)')
+	c.execute('CREATE  INDEX "main"."cascades_casid" ON "cascades" ("casid" ASC)')
+	c.execute('CREATE  INDEX "main"."cascades_edge" ON "cascades" ("userida","useridb" ASC)')
+	c.execute('CREATE  INDEX "main"."cascadeid_casid" ON "cascadeurlid" ("casid" ASC)')
+	#c.execute('CREATE  INDEX "main"."cascadeshash_casid" ON "cascadeshash" ("casid" ASC)')
+	#c.execute('CREATE  INDEX "main"."cascadehashid_casid" ON "cascadehashid" ("casid" ASC)')
+except BaseException as e:
+	# load all variables from database
+	rowexec = c.execute('SELECT * FROM NODES');
+	for row in rowexec:
+		nodes[row[0]] = {'userid': row[0], 'username': row[1]}
 
+	rowexec = c.execute('SELECT * FROM EDGES');
+	for row in rowexec:
+		if row[0] not in edges.keys():
+			edges[row[0]] = {}
+		if row[1] not in edges[row[0]]:
+			edges[row[0]][row[1]] = {'userida': row[0], 'useridb': row[1]}
+
+	rowexec = c.execute('SELECT * FROM CASCADEURLID');
+	for row in rowexec:
+		cascadeid+=1
+		cascades[row[1]] = {'cascadeid': row[0],'url': row[1]}
+	print(cascadeid)
 
 
 # search
@@ -63,14 +90,6 @@ c.execute('CREATE  INDEX "main"."cascadeid_casid" ON "cascadeurlid" ("casid" ASC
 #print(twitterapi)
 #print(len(twitterapi))
 
-fileStream = {}
-cascades = {}
-edges = {}
-nodes = {}
-global cascadeid
-cascadeid = 0
-global counter
-counter = 0
 
 def insertNodes(node):
 	params = []
@@ -237,7 +256,7 @@ class MyListener(StreamListener):
 
 
 				global counter
-				if (counter >= 1000):
+				if (counter >= 100):
 					print('commit')
 					conn.commit();
 					counter = 0
