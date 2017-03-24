@@ -81,7 +81,7 @@ def uniqfy(seq):
 
 counter = 0
 
-with open('quotes_2009-02.txt','r') as memes:
+with open('quotes_2009-04.txt','r') as memes:
 	comments = []
 	links = []
 	page = ''
