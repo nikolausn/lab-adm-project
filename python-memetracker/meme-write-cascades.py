@@ -34,7 +34,21 @@ def insertObservationNodes(node):
 	c.execute("INSERT INTO observation_nodes VALUES (?,?)",params)
 
 # write nodes
+# following nodes
+# row[0] follow row[1]
+edges = c.execute("SELECT distinct (select b.id from observation_nodes b where a.domaina=b.node) as nodea,(select b.id from observation_nodes b where a.domainb=b.node) as nodeb from observation_cascades a")
+nodes = {}
+for edge in edges:
+	with open('nodes-file.txt','a') as nodesFile:
+		if edge[0] not in nodes:
+			nodes[edge[0]] = 1
+			nodesFile.write('{}\n'.format(edge[0]))
+		if edge[1] not in nodes:
+			nodes[edge[1]] = 1
+			nodesFile.write('{}\n'.format(edge[1]))
 
+	with open('edges-file.txt','a') as edgesFile:
+		edgesFile.write(json.dumps([edge[0],edge[1]])+'\n')
 
 # get cascades from observation cascades
 urlbRows = c.execute("SELECT distinct urlb from observation_cascades")
@@ -51,6 +65,8 @@ for urlb in urlbRows:
 	c1 = conn.cursor()	
 	finishTrace = False
 	myArr = []
+	# to track recurrence, don't look back
+	domainHist = []
 	i = 0
 	length = 0
 	#while not finishTrace:
@@ -72,29 +88,49 @@ for urlb in urlbRows:
 			startDate = myDate
 		cascadeTime = myDate - startDate
 		# break early if the time reach its meantime
-		if cascadeTime > meanTime:
+		if cascadeTime > meanTime or cascade[0] in domainHist:
 			if i>1 :
 				#if maxTime < myArr[len(myArr)-1]['time']:
 				#	maxTime = myArr[len(myArr)-1]['time']
 				arrTime.append(myArr[len(myArr)-1]['time'])
 				cascades[cascadeCount] = {'casid': cascadeCount,'url': urlb[0],'cas': myArr,'cascount': i}
-				cascadeCount+=1
-			# reset count
-			i = 0
-			# add 2 latest cascades
+				cascadeCount+=1		
+			# will the last item eligible to be the first one for reccurence
 			firstCas = myArr[len(myArr)-1].copy();
 			startDate = datetime.strptime(firstCas['date'],'%Y-%m-%d %H:%M:%S').timestamp()
-			firstCas['time']=0
+			# reset count
 			myArr = []
-			myArr.append(firstCas)
-			cascadeTime = myDate - startDate
-			myArr.append({'node': cascade[0],'time': cascadeTime,'date': cascade[1],'text': cascade[2]})
+			domainHist = []
+			i = 0
+			# if because of domain reccurence
+			if cascade[0] in domainHist or cascade[0]==firstCas['node'] or (myDate-startDate) > meanTime:
+				startDate = myDate
+				cascadeTime = myDate - startDate
+				myArr.append({'node': cascade[0],'time': cascadeTime,'date': cascade[1],'text': cascade[2]})
+				domainHist.append(cascade[0])
+				i+=1
+			else:
+			# because of average time
+				# add 2 latest cascades
+				startDate = datetime.strptime(firstCas['date'],'%Y-%m-%d %H:%M:%S').timestamp()
+				firstCas['time']=0
+				myArr.append(firstCas)
+				domainHist.append(firstCas['node'])
+				i+=1
+				cascadeTime = myDate - startDate
+				myArr.append({'node': cascade[0],'time': cascadeTime,'date': cascade[1],'text': cascade[2]})
+				domainHist.append(cascade[0])					
+				i+=1
+
 			print('{} {} {}'.format(urlb[0],i,cascadeTime))				
 			print('reach meanTime, break {}'.format(length))
 			#continue
 		else:
 			myArr.append({'node': cascade[0],'time': cascadeTime,'date': cascade[1],'text': cascade[2]})
 			print('{} {} {}'.format(urlb[0],i,cascadeTime))
+
+			# tracking reccurence, don't look back
+			domainHist.append(cascade[0])
 			i+=1
 
 		#finishTrace = True
