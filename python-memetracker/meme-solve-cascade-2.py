@@ -231,7 +231,7 @@ for target_node in range(num_nodes):
         #if prob.status in [CVX.OPTIMAL, CVX.OPTIMAL_INACCURATE]:
         A[:, target_node] = np.asarray(Ai.value).squeeze()
         # compare the accuracy
-        print(calc_score(A[:,0:target_node+1],ASol[:,0:target_node+1]))
+        #print(calc_score(A[:,0:target_node+1],ASol[:,0:target_node+1]))
         #else:
         #    A[:, target_node] = -1
         #print('result: {}'.format(res))
