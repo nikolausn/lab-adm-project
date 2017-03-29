@@ -202,6 +202,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                 # relation with other cascades on the edges
                 if len(infection_time_arr) == 0:
                     # Node 'i' was not infected in this cascade
+                    """
                     for j in range(len(c)):
                         alpha_ji = Ai[convexNodes[c[j][1]]]
                         #print('alpha_ji surv: {}'.format(alpha_ji))
@@ -210,6 +211,10 @@ with open('cascade-file-parent.txt','r') as casFile:
                         #print('log sur1: {}'.format(logSurvival(T, t_j, alpha_ji)))
                         expr += logSurvival(T, t_j, alpha_ji)
                         #print('log expr: {}\n'.format(expr))
+                    """
+                    # because we are interested in parent and child relation only
+                    # then the logsurvival is the maximum ammount of the observation time
+                    expr+=logSurvival(T,0,alpha_ji)
                 else:
                     # Node 'i' was infected in this cascade
                     infection_time = infection_time_arr[0]
@@ -235,7 +240,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                                 #pass
                         expr += CVX.log(log_sum)
                         """
-                        # test for parent child relation only
+                        # for parent child relation only
                         t_j = 0
                         alpha_ji = Ai[convexNodes[parent_node-1]]
                         expr+=logSurvival(t_i,0,alpha_ji)

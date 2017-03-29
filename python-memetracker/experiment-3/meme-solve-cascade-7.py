@@ -153,7 +153,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                 if j == target_node:
                     constraints.append(Ai[j] == 0)
                 else:
-                    constraints.append(Ai[j] >> 0)
+                    constraints.append(Ai[j] >= 0)
 
             #print(constraints)
 
