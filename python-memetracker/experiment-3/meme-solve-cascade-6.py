@@ -214,6 +214,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                     """
                     # because we are interested in parent and child relation only
                     # then the logsurvival is the maximum ammount of the observation time
+                    T = time_period
                     expr+=logSurvival(T,0,alpha_ji)
                 else:
                     # Node 'i' was infected in this cascade
