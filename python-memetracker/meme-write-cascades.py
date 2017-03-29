@@ -25,7 +25,6 @@ except BaseException as e:
 	print(e)
 	# read url
 
-
 def insertObservationNodes(node):
 	params = []
 	params.append(node['id'])
@@ -33,9 +32,31 @@ def insertObservationNodes(node):
 	c = conn.cursor()
 	c.execute("INSERT INTO observation_nodes VALUES (?,?)",params)
 
+
+# load url vocabulary
+urlVocabs = c.execute("SELECT b.id,a.date,a.url from clusterurl a,observation_nodes b where b.node=a.domain")
+vocabs = {}
+for urlvocab in urlVocabs:
+	if urlvocab[2] not in vocabs:
+		vocabs[urlvocab[2]] = {'node': urlvocab[0],'date':urlvocab[1]}
+	else:
+		if urlvocab[1] < vocabs[urlvocab[2]]['date']:
+			vocabs[urlvocab[2]] = {'node': urlvocab[0],'date':urlvocab[1]}	
+
+# load nodes id
+nodesId = {}
+nodeVocab = c.execute("SELECT id, node from observation_nodes")
+for myNode in nodeVocab:
+	if myNode[1] not in nodesId:
+		nodesId[myNode[1]] = myNode[0]
+		with open('nodes-file.txt','a') as nodesFile:
+			nodesFile.write('{},{}\n'.format(myNode[0],myNode[1]))
+
+
 # write nodes
 # following nodes
 # row[0] follow row[1]
+"""
 edges = c.execute("SELECT distinct (select b.id from observation_nodes b where a.domaina=b.node) as nodea,(select b.id from observation_nodes b where a.domainb=b.node) as nodeb from observation_cascades a")
 nodes = {}
 for edge in edges:
@@ -49,6 +70,28 @@ for edge in edges:
 
 	with open('edges-file.txt','a') as edgesFile:
 		edgesFile.write(json.dumps([edge[0],edge[1]])+'\n')
+"""
+# make edges from 3hops data
+casRows = c.execute("SELECT cascade from edge_hops where count=2")
+nodes = {}
+for casRow in casRows:
+	myCases = json.loads(casRow[0])
+	#print(myCas)
+	for myCas in myCases:
+		edge = [myCas['cascades'][1][1],myCas['cascades'][1][0]]
+
+		"""
+		with open('nodes-file.txt','a') as nodesFile:
+			if edge[0] not in nodes:
+				nodes[edge[0]] = 1
+				nodesFile.write('{}\n'.format(edge[0]))
+			if edge[1] not in nodes:
+				nodes[edge[1]] = 1
+				nodesFile.write('{}\n'.format(edge[1]))
+		"""			
+
+		with open('edges-file.txt','a') as edgesFile:
+			edgesFile.write(json.dumps([nodesId[edge[0]],nodesId[edge[1]]])+'\n')
 
 # get cascades from observation cascades
 urlbRows = c.execute("SELECT distinct urlb from observation_cascades")
@@ -60,6 +103,7 @@ cascadeCount = 0
 maxTime = 0
 arrTime = []
 # use mean time for define recuring cascades 5751721
+# about 3 month, otherwise we treat it as recurring matrix
 meanTime = 5751721
 for urlb in urlbRows:
 	c1 = conn.cursor()	
@@ -69,6 +113,20 @@ for urlb in urlbRows:
 	domainHist = []
 	i = 0
 	length = 0
+
+	# get vocab
+	"""
+	if urlb[0] in vocabs:
+		myvocab = vocabs[urlb[0]]
+		myDate = datetime.strptime(myvocab['date'],'%Y-%m-%d %H:%M:%S').timestamp()
+		startDate = myDate
+		cascadeTime = myDate - startDate
+		myArr.append({'node': myvocab['node'],'time': cascadeTime,'date': myvocab['date'],'text': ''})
+		i = 1
+	else:
+		print('not found {}'.format(urlb))
+	"""
+
 	#while not finishTrace:
 	#	print('length: {}'.format(length))
 	cascadeRows = c1.execute('SELECT distinct (select b.id from observation_nodes b where a.domaina=b.node) as nodeid, date,memetext from observation_cascades a where urlb=? order by date asc',[urlb[0]])	

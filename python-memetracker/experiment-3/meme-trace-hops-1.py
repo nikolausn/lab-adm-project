@@ -4,6 +4,7 @@ import os
 import sys
 import re
 import sqlite3
+import time
 
 sys.setrecursionlimit(100000)
 
@@ -18,7 +19,7 @@ conn.text_factory = str
 c = conn.cursor()
 
 try:
-	c.execute("CREATE TABLE edge_hops (start TEXT,cascade TEXT, count INTEGER)")
+	c.execute("CREATE TABLE edge_three_hops (start TEXT,cascade TEXT, count INTEGER)")
 except BaseException as e:
 	print(e)
 	# read url
@@ -28,9 +29,9 @@ def insertEdgeHops(hops):
 	params = []
 	params.append(hops['start'])
 	params.append(hops['cascade'])
-	params.append(hops['count'])
+	params.append(hops['maxlevel'])
 	c = conn.cursor()
-	c.execute("INSERT INTO edge_hops VALUES (?,?,?)",params)
+	c.execute("INSERT INTO edge_three_hops VALUES (?,?,?)",params)
 
 # read all edges
 #rows = c.execute("SELECT DISTINCT urla,urlb from cascades")
@@ -97,21 +98,32 @@ print('cascade ok')
 #rowsCas = c.execute("SELECT distinct domaina,domainb from edges")
 rowsCas = c.execute("SELECT distinct domainb from edges")
 
-def recurCascades(urlb,resArr,myBag,urlParent,level,history):
+def recurCascades(urlb,resArr,myBag,urlParent,level,history,maxhop,maxlevel):
 	c = conn.cursor()
 	rows = c.execute('SELECT domainb,domaina from edges where domainb = ?',[urlb])
+	history.append(urlb)
+	#print (level)
 	i = 0
-	for row in rows:
-		if row[0] not in history:
-			# don't turn back
-			i+=1
-			history = history.copy();
-			history.append(urlb)
-			resArrCopy = resArr.copy()
-			resArrCopy.append(row)
-			recurCascades(row[1],resArrCopy,myBag,urlParent,level+1,history)
+	if level <= maxhop:
+		for row in rows:
+			#print(history)
+			#if row[1] not in history and level<=maxhop:
+			#print('history: {}'.format(history))
+			if row[1] not in history:
+				# don't turn back
+				#print(row)
+				#time.sleep(1)
+				i+=1
+				#historyCopy = history.copy();
+				#historyCopy.append(row[0])
+				resArrCopy = resArr.copy()
+				resArrCopy.append(row)
+				recurCascades(row[1],resArrCopy,myBag,urlParent,level+1,history,maxhop,maxlevel)			
+				#recurCascades(row[1],resArrCopy,myBag,urlParent,level+1,historyCopy,maxhop)
 	if i == 0:
 		#print(json.dumps(resArr))
+		if level>maxlevel:
+			maxlevel = level
 		myBag[urlParent].append({ 'count': level - 1, 'cascades': resArr})
 		#print(json.dumps(myBag))
 
@@ -121,9 +133,10 @@ for row in rowsCas:
 	print(j)
 	myBag = {}
 	myBag[row[0]] = []
-	recurCascades(row[0],[],myBag,row[0],1,[])
+	maxlevel = 0
+	recurCascades(row[0],[],myBag,row[0],1,[],2,maxlevel)
 	print(json.dumps({'start': row[0], 'cascade': myBag[row[0]]}))
-	#insertEdgeHops({'start': urlParent, 'cascade': json.dumps(myBag[urlParent]), 'count': level - 1})
+	insertEdgeHops({'start': row[0], 'cascade': json.dumps(myBag[row[0]]), 'maxlevel': maxlevel - 1})
 	#conn.commit();
 	#print(json.dumps(myBag))
 	#with open('network-file.txt','a') as casfile:
@@ -133,5 +146,7 @@ for row in rowsCas:
 	#recurs = recurC.execute(recursive_edges,params)
 	#for recur in recurs:
 	#	print(recur)
+
+conn.commit();
 
 
