@@ -105,6 +105,7 @@ with open('cascade-file-parent.txt','r') as casFile:
         #print(obsNode)
         cascade_count = 0
         parent_node = obsNode['node']
+        print('parent node {}'.format(parent_node))
         for obsCascades in obsNode['cascades']:
             cascade_id = cascade_count
             #obsCascades['casid']
@@ -185,7 +186,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                 #c_idx = nodecas
                 #c = cascades[c_idx]
                 #print(myCount)
-                print(c)
+                #print(c)
                 myCount+=1
                 infection_time_arr = [x[0] for x in c if convexNodes[x[1]] == target_node]
                 #print('infection time: {}'.format(infection_time_arr))
@@ -221,6 +222,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                         # as a result this function will build an expression
                         # that will be solved by convex problem            
                         log_sum = 0
+                        """
                         for j in range(len(c)):
                             t_j = c[j][0]
                             alpha_ji = Ai[convexNodes[c[j][1]]]
@@ -231,31 +233,49 @@ with open('cascade-file-parent.txt','r') as casFile:
                                 #print('log sur2: {}'.format(logSurvival(t_i,t_j,alpha_ji)))
                                 log_sum+=hazard(t_i,t_j,alpha_ji)
                                 #pass
-
                         expr += CVX.log(log_sum)
+                        """
+                        # test for parent child relation only
+                        t_j = 0
+                        alpha_ji = Ai[convexNodes[parent_node-1]]
+                        expr+=logSurvival(t_i,0,alpha_ji)
+                        log_sum+=hazard(t_i,0,alpha_ji)
+                        expr += CVX.log(log_sum)
+
                         #print('haz expr: {}\n'.format(expr))
             print('log expr: {}\n'.format(expr))            
             #time.sleep(2)
             try:
                 prob = CVX.Problem(CVX.Maximize(expr), constraints)
-                res = prob.solve(verbose=True,)
+                #res = prob.solve(verbose=True,max_iters=500)
+                res = prob.solve(verbose=True)
                 probs.append(prob)
                 results.append(res)
                 #if prob.status in [CVX.OPTIMAL, CVX.OPTIMAL_INACCURATE]:
                 tempA = np.asarray(Ai.value).squeeze().tolist()
+                A[:,target_node] = tempA
                 #print(len(tempA))
-                A = {}
+                Aone = {}                
                 for x in range(len(tempA)):            
-                    A[convexNodesArr[x]+1] = tempA[x]
+                    Aone[convexNodesArr[x]+1] = tempA[x]
                 #print(A)
                 #else:
                 #    A[:, target_node] = -1
                 #print('result: {}'.format(res))
             except BaseException as e:
                 print(e)
-                A = -1
+                A[:,target_node] = -1
+            with open('prediction-parent-all.txt','a') as writer:
+                writer.write(json.dumps({'parent_node':  parent_node,'target_node': convexNodesArr[target_node]+1,'res':res,'alpha': Aone})+'\n')
+        
+        if num_nodes > 0:
+            Atwo = {}
+            print(convexNodes.keys())
+            for x in range(len(A[convexNodes[parent_node-1],:])):            
+                Atwo[convexNodesArr[x]+1] = A[convexNodes[parent_node-1],:][x]
+
             with open('prediction-parent.txt','a') as writer:
-                writer.write(json.dumps({'parent_node':  parent_node,'target_node': convexNodesArr[target_node]+1,'res':res,'alpha': A})+'\n')
+                writer.write(json.dumps({'parent_node':  parent_node,'alpha': Atwo})+'\n')
             #with open('results.txt','a') as writer:
             #    writer.write(res)
 
