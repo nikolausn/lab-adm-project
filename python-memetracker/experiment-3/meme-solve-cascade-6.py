@@ -215,6 +215,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                     # because we are interested in parent and child relation only
                     # then the logsurvival is the maximum ammount of the observation time
                     T = time_period
+                    alpha_ji = Ai[convexNodes[c[0][1]]]
                     expr+=logSurvival(T,0,alpha_ji)
                 else:
                     # Node 'i' was infected in this cascade
@@ -249,7 +250,7 @@ with open('cascade-file-parent.txt','r') as casFile:
                         expr += CVX.log(log_sum)
 
                         #print('haz expr: {}\n'.format(expr))
-            #print('log expr: {}\n'.format(expr))            
+            print('log expr: {}\n'.format(expr))            
             #time.sleep(2)
             try:
                 prob = CVX.Problem(CVX.Maximize(expr), constraints)
