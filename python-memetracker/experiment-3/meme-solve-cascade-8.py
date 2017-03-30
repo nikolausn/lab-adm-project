@@ -105,9 +105,13 @@ with open('cascade-file-parent.txt','r') as casFile:
         #print(obsNode)
         cascade_count = 0
         parent_node = obsNode['node']
+        # to skip parent node if somehow it
+        # crash or killed
+        """
         if parent_node <= 1291:
          print(parent_node)
          continue
+        """
         print('parent node {}'.format(parent_node))
         for obsCascades in obsNode['cascades']:
             cascade_id = cascade_count
