@@ -277,8 +277,8 @@ with open('cascade-file-parent.txt','r') as casFile:
         except BaseException as e:
             print(e)
             A[convexNodes[parent_node-1],:] = -1
-        with open('prediction-parent-all.txt','a') as writer:
-            writer.write(json.dumps({'parent_node':  parent_node,'target_node': convexNodesArr[target_node]+1,'res':res,'alpha': Aone})+'\n')
+        #with open('prediction-parent-all.txt','a') as writer:
+        #    writer.write(json.dumps({'parent_node':  parent_node,'target_node': convexNodesArr[target_node]+1,'res':res,'alpha': Aone})+'\n')
         
         #time.sleep(5)
 
@@ -288,7 +288,7 @@ with open('cascade-file-parent.txt','r') as casFile:
             for x in range(len(A[convexNodes[parent_node-1],:])):            
                 Atwo[convexNodesArr[x]+1] = A[convexNodes[parent_node-1],:][x]
 
-            with open('prediction-parent.txt','a') as writer:
+            with open('prediction-parent-childs.txt','a') as writer:
                 writer.write(json.dumps({'parent_node':  parent_node,'alpha': Atwo})+'\n')
             #with open('results.txt','a') as writer:
             #    writer.write(res)
