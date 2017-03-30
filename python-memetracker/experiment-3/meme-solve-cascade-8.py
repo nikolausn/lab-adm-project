@@ -105,6 +105,9 @@ with open('cascade-file-parent.txt','r') as casFile:
         #print(obsNode)
         cascade_count = 0
         parent_node = obsNode['node']
+        if parent_node <= 1291:
+         print(parent_node)
+         continue
         print('parent node {}'.format(parent_node))
         for obsCascades in obsNode['cascades']:
             cascade_id = cascade_count
@@ -183,6 +186,7 @@ with open('cascade-file-parent.txt','r') as casFile:
             observationCascades = list(set(observationCascades))
             """
 
+            bad_infection = 0
             for c_idx, c in cascades.items():
             #for nodecas in nodeCascades[target_node]:
             #for nodecas in observationCascades:
@@ -215,11 +219,21 @@ with open('cascade-file-parent.txt','r') as casFile:
                         expr += logSurvival(T, t_j, alpha_ji)
                         #print('log expr: {}\n'.format(expr))
                     """
+                    
+                    # Instead of making so many parameter for uninteresting
+                    # cascade better to add counter for bad_infection
+                    # and multiply it with the survival function
+                    # in the end. Therefore we can save memory for
+                    # making a convex function
+                    """
                     # because we are interested in parent and child relation only
                     # then the logsurvival is the maximum ammount of the observation time
                     T = time_period
                     alpha_ji = Ai[target_node]
                     expr+=logSurvival(T,0,alpha_ji)
+                    """
+
+                    bad_infection+=1
                 else:
                     # Node 'i' was infected in this cascade
                     infection_time = infection_time_arr[0]
@@ -251,12 +265,16 @@ with open('cascade-file-parent.txt','r') as casFile:
                         expr+=logSurvival(t_i,0,alpha_ji)
                         log_sum+=hazard(t_i,0,alpha_ji)
                         expr += CVX.log(log_sum)
-                #print('expr: {}'.format(expr))
-                #time.sleep(2)
+            # calculate bad infection
+            T = time_period
+            alpha_ji = Ai[target_node]                       
+            expr += bad_infection * logSurvival(T,0,alpha_ji)                
+            #print('expr: {}'.format(expr))
+            #time.sleep(2)
 
-                        #print('haz expr: {}\n'.format(expr))
-        #print('log expr: {}\n'.format(expr))            
-        #time.sleep(2)
+        #print('haz expr: {}\n'.format(expr))
+        print('log expr: {}\n'.format(expr))            
+        time.sleep(2)
         try:
             prob = CVX.Problem(CVX.Maximize(expr), constraints)
             #res = prob.solve(verbose=True,max_iters=500)
