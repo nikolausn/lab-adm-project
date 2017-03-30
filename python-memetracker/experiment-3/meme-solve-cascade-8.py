@@ -277,8 +277,8 @@ with open('cascade-file-parent.txt','r') as casFile:
             #time.sleep(2)
 
         #print('haz expr: {}\n'.format(expr))
-        print('log expr: {}\n'.format(expr))            
-        time.sleep(2)
+        #print('log expr: {}\n'.format(expr))            
+        #time.sleep(2)
         try:
             prob = CVX.Problem(CVX.Maximize(expr), constraints)
             #res = prob.solve(verbose=True,max_iters=500)
