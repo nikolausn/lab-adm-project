@@ -6,6 +6,8 @@ import cvxpy as CVX
 from collections import defaultdict
 import simplejson as json
 import time
+import gc
+from mem_top import mem_top
 
 nodes = []
 nodeHash = {}
@@ -315,5 +317,9 @@ with open('cascade-file-parent.txt','r') as casFile:
             #with open('results.txt','a') as writer:
             #    writer.write(res)
 
+        # perform gc collect after iteration save up memory
+        #gc.collect()
+        print(mem_top())
+        #time.sleep(1)
 
 

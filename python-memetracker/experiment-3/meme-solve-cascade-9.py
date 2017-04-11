@@ -6,6 +6,9 @@ import cvxpy as CVX
 from collections import defaultdict
 import simplejson as json
 import time
+import gc
+from mem_top import mem_top
+import copy
 
 nodes = []
 nodeHash = {}
@@ -135,9 +138,10 @@ nodeCasSort = sorted(list(nodeCascades.keys()))
 
 # explore the nodes that appear in cascades only
 #for target_node in nodeCascades.keys():
+myCount = 0
 for target_node in nodeCasSort:
-    print(target_node)    
-    myCount = 0
+    print(target_node)
+    myCount+=1
 
     # we want to infer transmission rate between child
     # and their parents, whose parent giving faster transmission
@@ -155,7 +159,8 @@ for target_node in nodeCasSort:
     convexNodesCount = 1
 
     # construct the cascade for following 
-    observationCascadesId = nodeCascades[target_node].copy()
+    #observationCascadesId = nodeCascades[target_node].copy()
+    observationCascadesId = copy.copy(nodeCascades[target_node])
 
     #print(edges[str(target_node)])
 
@@ -197,8 +202,8 @@ for target_node in nodeCasSort:
         if j == convexNodes[target_node]:
             constraints.append(Ai[j] == 0)
         else:
-            #constraints.append(Ai[j] >= 0)
-            constraints.append(Ai[j] >> 0)
+            constraints.append(Ai[j] >= 0)
+            #constraints.append(Ai[j] >> 0)
 
     # this line is used if we are interested in the neighborhood
     # cascade as well, but to do this we need to load all the cascades
@@ -323,7 +328,8 @@ for target_node in nodeCasSort:
     try:
         prob = CVX.Problem(CVX.Maximize(expr), constraints)
         #res = prob.solve(verbose=True,max_iters=500)
-        res = prob.solve(verbose=True)
+        #res = prob.solve(verbose=True)
+        res = prob.solve(verbose=True,solver=CVX.CVXOPT)        
         probs.append(prob)
         results.append(res)
         #if prob.status in [CVX.OPTIMAL, CVX.OPTIMAL_INACCURATE]:
@@ -354,3 +360,11 @@ for target_node in nodeCasSort:
             writer.write(json.dumps({'target_node': target_node,'alpha': Atwo})+'\n')
         #with open('results.txt','a') as writer:
         #    writer.write(res)
+
+    print(myCount)
+    if myCount>500:
+        # cleanup memory, otherwise it will be killed
+        gc.collect()
+        #print(mem_top())
+        myCount=0
+
