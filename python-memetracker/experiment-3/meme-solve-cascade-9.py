@@ -119,8 +119,6 @@ with open('cascade-file-parent.txt','r') as casFile:
 A = np.zeros((num_nodes, num_nodes), dtype=float)
 """
 
-probs = []
-results = []
 
 def logSurvival(t_i, t_j, alpha_ji):
     # survival function for the transmission
@@ -330,8 +328,6 @@ for target_node in nodeCasSort:
         #res = prob.solve(verbose=True,max_iters=500)
         #res = prob.solve(verbose=True)
         res = prob.solve(verbose=True,solver=CVX.CVXOPT)        
-        probs.append(prob)
-        results.append(res)
         #if prob.status in [CVX.OPTIMAL, CVX.OPTIMAL_INACCURATE]:
         tempA = np.asarray(Ai.value).squeeze().tolist()
         A[:,convexNodes[target_node]] = tempA
