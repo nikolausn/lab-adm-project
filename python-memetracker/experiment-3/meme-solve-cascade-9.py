@@ -301,7 +301,9 @@ for target_node in nodeCasSort:
                             #pass
                         #print('expr: {}'.format(expr))
                         #time.sleep(1)
-                expr += CVX.log(log_sum)                
+                #print(CVX.log(log_sum))
+                #time.sleep(5)
+                expr += CVX.log(log_sum)
                 #print('expr: {}'.format(expr))
                 #time.sleep(5)
 
@@ -321,13 +323,14 @@ for target_node in nodeCasSort:
     expr += bad_infection * logSurvival(T,0,alpha_ji)
     """
     #print('expr: {}'.format(expr))
-    #time.sleep(2)
+    #time.sleep(5)
 
     try:
+
         prob = CVX.Problem(CVX.Maximize(expr), constraints)
         #res = prob.solve(verbose=True,max_iters=500)
         #res = prob.solve(verbose=True)
-        res = prob.solve(verbose=True,solver=CVX.CVXOPT)        
+        res = prob.solve(verbose=True)        
         #if prob.status in [CVX.OPTIMAL, CVX.OPTIMAL_INACCURATE]:
         tempA = np.asarray(Ai.value).squeeze().tolist()
         A[:,convexNodes[target_node]] = tempA
