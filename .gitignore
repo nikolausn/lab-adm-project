@@ -1,3 +1,5 @@
+*.dot
+*.svg
 *.zip
 *.txt
 *.tweet
@@ -8,3 +10,5 @@
 *.sqlite-journal
 *.gz
 *backup
+.ipynb*
+.DS*

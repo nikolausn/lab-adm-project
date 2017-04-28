@@ -134,13 +134,13 @@ def hazard(t_i, t_j, alpha_ji):
     #return alpha_ji
     return alpha_ji
 
+
 nodeCasSort = sorted(list(nodeCascades.keys()))
 
 # explore the nodes that appear in cascades only
 #for target_node in nodeCascades.keys():
 myCount = 0
 for target_node in nodeCasSort:
-    import cvxpy as CVX
     print(target_node)
     myCount+=1
 

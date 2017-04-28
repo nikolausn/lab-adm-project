@@ -30,7 +30,7 @@ regex = re.compile('[%s]' % re.escape(string.punctuation))
 em_results = pickle.load( open( "em_results_15b.p", "rb" ) )
 print(em_results['p_jk'].shape)
 
-casWrite = open('cascade-file-parent-probs.txt','a')
+casWrite = open('cascade-file-parent-probs2.txt','a')
 
 with open('cascade-file-parent.txt','r') as casFile:
 	for casRead in casFile:
@@ -60,6 +60,7 @@ with open('cascade-file-parent.txt','r') as casFile:
 			([checkVocab(x) for x in new_token])			
 			if len(vocabArr)>0:
 				probs = (em_results['p_jk'][:,vocabArr]).sum(axis=1)
+				obsCascades['text'] = casText
 				obsCascades['probs'] = probs.tolist()
 			else:
 				obsCascades['probs'] = []
