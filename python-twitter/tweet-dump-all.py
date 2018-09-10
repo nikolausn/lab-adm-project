@@ -30,13 +30,46 @@ os.chdir(topic)
 global counter
 counter = 0
 
-twitter_dump_file = open(topic+'.tweet','a')
+# make the file different for each hour
+import datetime
+now_time = datetime.datetime.now()
+global day
+day = now_time.day
+global month
+month = now_time.month
+global year
+year = now_time.year
+global hour
+hour = now_time.hour
+
+global twitter_dump_file
+twitter_dump_file = open('{}-{:04d}{:02d}{:02d}-{:02d}.tweet'.format(topic,year,month,day,hour),'a')
 
 class MyListener(StreamListener):
 	def on_data(self,data):
 		try:
 			# we interested in english language only
-			jsondata = json.loads(data)
+			#jsondata = json.loads(data)
+
+			# compare with the old time
+			current_time = datetime.datetime.now()
+			cur_day = current_time.day
+			cur_hour = current_time.hour
+			cur_month = current_time.month
+			cur_year = current_time.year
+			global day
+			global hour
+			global month
+			global year
+			global twitter_dump_file
+			if cur_hour!=hour:
+				day = cur_day
+				month = cur_month
+				year = cur_year
+				hour = cur_hour
+				twitter_dump_file = open('{}-{:04d}{:02d}{:02d}-{:02d}.tweet'.format(topic, year, month, day, hour),'a')
+
+			"""
 			if 'lang' in jsondata.keys() and jsondata['lang']=='en':
 				# we are interested in data that have cascade
 				# expanded_url, user_mentions, retweeted_status, quoted_status, in_reply_to_status_id
@@ -46,6 +79,8 @@ class MyListener(StreamListener):
 				or jsondata['is_quote_status'] \
 				or 'retweeted_status' in jsondata.keys():
 					twitter_dump_file.writelines(data)
+			"""
+			twitter_dump_file.write(data)
 #			global counter
 #			if(counter>10000):
 #				counter=0
